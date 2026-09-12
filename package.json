@@ -19,15 +19,26 @@
     "monaco",
     "patch"
   ],
+  "files": [
+    "app.tsx",
+    "server.ts",
+    "components",
+    "hooks",
+    "lib",
+    "dist",
+    "README.md"
+  ],
   "type": "module",
   "engines": {
     "bb": ">=0.42",
     "bbPluginSdk": ">=0.4.47"
   },
   "scripts": {
+    "build:monaco": "node scripts/stage-assets.mjs",
     "build": "bb plugin build",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build"
+    "verify:monaco": "node scripts/verify-diff-worker.mjs",
+    "check": "npm run typecheck && npm run build:monaco && npm run build"
   },
   "bb": {
     "name": "Diff Editor",
@@ -66,7 +77,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cron-parser": "^5.5.0",
+    "esbuild": "^0.28.2",
     "hono": "^4.11.9",
+    "monaco-editor": "^0.56.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.4.0",
     "typescript": "^5.7.0",

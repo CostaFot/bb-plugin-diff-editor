@@ -1,2 +1,9 @@
-dist/
 node_modules/
+
+# `dist/` is build output, except for the Monaco bundle. That one is
+# committed: bb installs plugin dependencies with `--ignore-scripts
+# --omit=dev --omit=optional`, so esbuild cannot run on anyone else's
+# install and `npm run build:monaco` is a maintainer's job. See
+# scripts/stage-assets.mjs.
+dist/*
+!dist/monaco/
