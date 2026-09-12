@@ -18,6 +18,10 @@
       ]
     },
     "noEmit": true,
+    // Node runs the tests straight off the .ts sources by stripping types, and
+    // its ESM resolver does not guess extensions — so imports inside lib/ carry
+    // the .ts they actually have. esbuild resolves those the same way.
+    "allowImportingTsExtensions": true,
     "skipLibCheck": false
   },
   "include": [

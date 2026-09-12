@@ -25,6 +25,8 @@
     "components",
     "hooks",
     "lib",
+    "!lib/**/*.test.ts",
+    "!lib/patch-fixtures.ts",
     "dist",
     "README.md"
   ],
@@ -37,8 +39,10 @@
     "build:monaco": "node scripts/stage-assets.mjs",
     "build": "bb plugin build",
     "typecheck": "tsc --noEmit",
+    "test": "node --test \"lib/**/*.test.ts\"",
     "verify:monaco": "node scripts/verify-diff-worker.mjs",
-    "check": "npm run typecheck && npm run build:monaco && npm run build"
+    "verify:patch-parser": "node scripts/verify-patch-parser.mjs",
+    "check": "npm run typecheck && npm run test && npm run build:monaco && npm run build"
   },
   "bb": {
     "name": "Diff Editor",
