@@ -222,12 +222,57 @@ export function splitLines(text: string): string[] {
  */
 function completePatch(patch: string, path: string): string {
   const body = patch.endsWith("\n") ? patch : `${patch}\n`;
-  if (body.startsWith("diff --git") || body.startsWith("--- ")) return body;
+  if (body.startsWith("diff --git") || body.startsWith("--- ")) {
+    return withStandardPrefixes(body);
+  }
 
   const name = path.trim();
   if (name === "") return body;
   const header = `diff --git a/${name} b/${name}`;
   return `${header}\n--- a/${name}\n+++ b/${name}\n${body}`;
+}
+
+/**
+ * `diff --git a/x b/x`, or the mnemonic prefixes git writes instead.
+ *
+ * With `diff.mnemonicPrefix` on, each side is labelled with where it came
+ * from — `i/` index, `w/` working tree, `c/` commit, `o/` object — rather than
+ * `a/` and `b/`.
+ */
+const GIT_HEADER_PATHS = /^diff --git ([abciow])\/(.+) ([abciow])\/(.+)$/;
+
+/**
+ * Puts `a/` and `b/` back on a patch written with git's mnemonic prefixes.
+ *
+ * The parser only reads `a/` and `b/`. On anything else it logs
+ * `invalid git diff header`, recovers, and returns a file with every hunk
+ * intact and no name at all — so the diff is right and nothing knows which
+ * file it is. That is not a rare configuration: `diff.mnemonicPrefix` is one
+ * line of gitconfig, and it makes bb hand this slot an empty `path` for every
+ * diff it renders.
+ *
+ * Only the lines above the first `@@` are touched. A content line can look
+ * like anything, including a header.
+ */
+function withStandardPrefixes(patch: string): string {
+  const lines = splitLines(patch);
+  const header = GIT_HEADER_PATHS.exec(lines[0].replace(/\r?\n$/, ""));
+  if (header === null) return patch;
+
+  const [, oldPrefix, oldPath, newPrefix, newPath] = header;
+  if (oldPrefix === "a" && newPrefix === "b") return patch;
+
+  lines[0] = `diff --git a/${oldPath} b/${newPath}\n`;
+  for (let index = 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.startsWith("@@")) break;
+    if (line.startsWith(`--- ${oldPrefix}/`)) {
+      lines[index] = `--- a/${line.slice("--- x/".length)}`;
+    } else if (line.startsWith(`+++ ${newPrefix}/`)) {
+      lines[index] = `+++ b/${line.slice("+++ x/".length)}`;
+    }
+  }
+  return lines.join("");
 }
 
 /**

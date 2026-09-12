@@ -140,6 +140,32 @@ index 3b73b16..304943c 100644
     "diff --git a/crlf.txt b/crlf.txt\n--- a/crlf.txt\n+++ b/crlf.txt\n" +
     "@@ -1,2 +1,2 @@\n-c1\r\n-c2\r\n+c1\n+c2\n",
 
+  /**
+   * The same modification as `rename`'s sibling, written by a git with
+   * `diff.mnemonicPrefix` on: `c/` for the commit side, `w/` for the working
+   * tree. bb passes these through to the slot exactly as git wrote them.
+   */
+  mnemonicPrefix: `diff --git c/mne.txt w/mne.txt
+index 4675391..cfd370d 100644
+--- c/mne.txt
++++ w/mne.txt
+@@ -1,2 +1,2 @@
+ keep
+-was
++now
+`,
+
+  /** A new file with the same setting on: the old side is still /dev/null. */
+  mnemonicPrefixAdded: `diff --git i/mne-new.txt w/mne-new.txt
+new file mode 100644
+index 0000000..b77b4eb
+--- /dev/null
++++ w/mne-new.txt
+@@ -0,0 +1,2 @@
++x
++y
+`,
+
   /** The shape GitHub's REST patches arrive in. */
   bareHunk: `@@ -1,3 +1,3 @@
  old1

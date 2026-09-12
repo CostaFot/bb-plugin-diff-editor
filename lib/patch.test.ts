@@ -192,3 +192,26 @@ test("a hunk whose content does not match its header is refused", () => {
   assert.ok(!result.ok);
   assert.equal(result.mismatch.hunkIndex, 0);
 });
+
+test("git's mnemonic prefixes do not cost the patch its name", () => {
+  // Without putting `a/` and `b/` back, the parser logs `invalid git diff
+  // header`, recovers, and returns every hunk under an empty name — which bb
+  // then passes to this slot as the file's path.
+  const parsed = parseFilePatch(P.mnemonicPrefix, "");
+  assert.notEqual(parsed, null);
+  assert.equal(parsed!.file.name, "mne.txt");
+  assert.equal(parsed!.file.type, "change");
+  assert.equal(
+    rebuild(P.mnemonicPrefix, "", "keep\nnow\n"),
+    "keep\nwas\n",
+  );
+
+  const added = parseFilePatch(P.mnemonicPrefixAdded, "");
+  assert.notEqual(added, null);
+  assert.equal(added!.file.name, "mne-new.txt");
+  assert.equal(added!.file.type, "new");
+});
+
+test("a patch already written with a/ and b/ is passed through untouched", () => {
+  assert.equal(parseFilePatch(P.rename, "ren2.txt")!.patch, P.rename);
+});

@@ -73,3 +73,44 @@ function injectStylesheet(href: string): Promise<void> {
     document.head.appendChild(link);
   });
 }
+
+/**
+ * A node outside the diff card for Monaco's overflowing widgets to live in.
+ *
+ * bb's diff card body sets `contain: layout paint style`, which makes it a
+ * containing block *and* clips anything painted past its bounds. A diff card
+ * is a few hunks tall, and the widgets that declare `allowEditorOverflow` —
+ * hover, suggest, parameter hints — are the ones that routinely need more
+ * room than that, so inside the card they are cropped to whatever fits.
+ *
+ * `fixedOverflowWidgets` plus a node on `document.body` is Monaco's own answer
+ * to that: it moves each editor's overflowing content and overlay widget
+ * containers here, out from under the containment. The first-party
+ * monaco-editor plugin already does this; the id is this plugin's own so that,
+ * with both installed, the two do not fight over one node's theme class.
+ */
+const OVERFLOW_NODE_ID = "bb-plugin-diff-editor-overflow-widgets";
+
+export function overflowWidgetsNode(): HTMLElement {
+  const existing = document.getElementById(OVERFLOW_NODE_ID);
+  if (existing !== null) return existing;
+  const node = document.createElement("div");
+  node.id = OVERFLOW_NODE_ID;
+  node.className = "monaco-editor";
+  node.style.position = "absolute";
+  node.style.top = "0";
+  node.style.left = "0";
+  node.style.zIndex = "40";
+  // Electron resolves native window-drag regions separately from CSS
+  // stacking, so a widget crossing a drag strip loses its hit target without
+  // this. It is the same marker bb puts on its own portaled surfaces.
+  node.setAttribute("data-bb-portaled-overlay", "");
+  document.body.appendChild(node);
+  return node;
+}
+
+/** Monaco styles widgets off the theme class on their container, not the editor. */
+export function setOverflowWidgetsTheme(base: "vs" | "vs-dark"): void {
+  const node = document.getElementById(OVERFLOW_NODE_ID);
+  if (node !== null) node.className = `monaco-editor ${base}`;
+}
